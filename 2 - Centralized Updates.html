@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <meta charset="utf-8" />
+    </head>
+    <body>
+        <input id="i1" type="number" onkeyup="i1changed()" />
+        <input id="i2" type="number" onkeyup="i2changed()" />
+        <button onclick="increase()">Increase</button>
+    </body>
+    <script>
+        let store = {};
+
+        function i1changed() {
+            const value = +d3.select("#i1").node().value;
+            setValue(value);
+        }
+
+        function i2changed() {
+            const value = +d3.select("#i2").node().value;
+            setValue(value - 2);
+        }
+        function increase() {
+            setValue(store.value + 1);
+        }
+
+        function setValue(newValue) {
+            store.value = newValue;
+            refresh();
+        }
+
+        function refresh() {
+            d3.select("#i1").node().value = store.value;
+            d3.select("#i2").node().value = store.value + 2;
+        }
+    </script>
+</html>

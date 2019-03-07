@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <meta charset="utf-8" />
+        <style>
+            .area {
+                fill: steelblue;
+                clip-path: url(#clip);
+            }
+
+            .zoom {
+                cursor: move;
+                fill: none;
+                pointer-events: all;
+            }
+        </style>
+        <script src="./linechart.js"></script>
+    </head>
+    <body>
+        <div><svg id="focus"></svg></div>
+        <div><svg id="focus2"></svg></div>
+        <div><svg id="context"></svg></div>
+    </body>
+    <script>
+        let store = {};
+        let storeDispatcher = d3.dispatch("update");
+
+        function setState(state) {
+            store = { ...store, ...state };
+            storeDispatcher.call("update", store);
+        }
+
+        function parseData(data) {
+            const parseDate = d3.timeParse("%b %Y");
+            return data.map(d => {
+                d.date = parseDate(d.date);
+                d.price = +d.price;
+                return d;
+            });
+        }
+
+        function generateDataPoint(data) {
+            const lastPoint = data.slice(-1)[0];
+            const newDate = new Date(lastPoint.date);
+            newDate.setMonth(lastPoint.date.getMonth() + 1);
+            const newValue =
+                lastPoint.price +
+                lastPoint.price *
+                    (Math.random() / 4) *
+                    (Math.random() > 0.5 ? 1 : -1);
+            return [
+                ...data,
+                {
+                    date: newDate,
+                    price: newValue
+                }
+            ];
+        }
+
+        (async function App() {
+            let data = await d3.csv("data.csv");
+            data = parseData(data);
+            const linchart1 = LineChart("focus");
+            const linchart3 = LineChart("focus2");
+            const linchart2 = LineChart(
+                "context",
+                300,
+                150,
+                d => {
+                    setState({ selection: d });
+                },
+                store.selection
+            );
+            storeDispatcher.on("update", () => {
+                const { data, selection } = store;
+                if (data) {
+                    linchart2(data, selection);
+                    let selectedData = data;
+                    if (selection) {
+                        selectedData = data.filter(
+                            d =>
+                                d.date > store.selection[0] &&
+                                d.date < store.selection[1]
+                        );
+                    }
+                    linchart1(selectedData);
+                    linchart3(selectedData);
+                }
+            });
+            setState({ data });
+            setInterval(() => {
+                const newDate = generateDataPoint(store.data);
+                setState({ data: newDate });
+            }, 1000);
+        })();
+    </script>
+</html>

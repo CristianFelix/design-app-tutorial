@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <meta charset="utf-8" />
+    </head>
+    <body>
+        <input id="i1" type="number" />
+        <input id="i2" type="number" />
+        <input id="i3" type="number" />
+        <button onclick="increase()">Increase</button>
+    </body>
+    <script>
+        let store = {};
+        let storeDispatcher = d3.dispatch("update");
+
+        function increase() {
+            setValue(store.value + 1);
+        }
+
+        function Input(id, bias = 0) {
+            const element = d3.select(`#${id}`);
+            element.on("keyup", function() {
+                setValue(+this.value - bias);
+            });
+
+            function refresh() {
+                element.node().value = store.value + bias;
+            }
+
+            storeDispatcher.on(`update.input${id}`, refresh);
+            refresh();
+        }
+
+        function setValue(newValue) {
+            store.value = newValue;
+            storeDispatcher.call("update", store);
+        }
+
+        (function App() {
+            store.value = 0;
+            Input("i1");
+            Input("i2", 2);
+            Input("i3", -2);
+        })();
+    </script>
+</html>
